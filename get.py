@@ -21,7 +21,7 @@ def get_token():
     return token
 
 
-query = """
+frame_query = """
 subscription replace($input: SubscribeInput!) {
   subscribe(input: $input) {
     id
@@ -41,6 +41,64 @@ subscription replace($input: SubscribeInput!) {
 }
 """
 
+config_query = """
+subscription configuration($input: SubscribeInput!) {
+  subscribe(input: $input) {
+    id
+    ... on BasicMessage {
+      data {
+        __typename
+        ... on ConfigurationMessageData {
+          canvasConfigurations {
+            index
+            dx
+            dy
+            __typename
+          }
+          canvasWidth
+          canvasHeight
+          __typename
+        }
+      }
+      __typename
+    }
+    __typename
+  }
+}
+"""
+
+id = 1
+
+def send_message(ws, message):
+  global id
+  _id = str(id)
+  id += 1
+  message['id'] = _id
+  ws.send(json.dumps(message))
+  while True:
+    d = json.loads(ws.recv())
+    if 'id' in d and d['id'] == _id:
+        data = d['payload']['data']['subscribe']['data']
+        yield data
+
+def get_url(ws, tag):
+  messages = send_message(ws, {'type': 'start', 'payload': {'variables': {'input': {'channel': {
+          'teamOwner': 'AFD2022', 'category': 'CANVAS', 'tag': str(tag)}}}, 'extensions': {}, 'operationName': 'replace', 'query': frame_query}})
+  name = None
+  for message in messages:
+    if message['__typename'] == 'FullFrameMessageData':
+      name = message['name']
+      return name
+
+
+
+def get_canvas_configs(ws):
+  messages = send_message(ws, {'id': '1', 'type': 'start', 'payload': {'variables': {'input': {'channel': {'teamOwner': 'AFD2022', 'category': 'CONFIG'}}}, 'extensions': {}, 'operationName': 'configuration', 'query': config_query}})
+  for message in messages:
+    for config in message['canvasConfigurations']:
+      yield (config['index'], config['dx'], config['dy'])
+    return
+
 
 def get_image_url(token):
     ws = websocket.create_connection("wss://gql-realtime-2.reddit.com/query")
@@ -51,19 +109,16 @@ def get_image_url(token):
         }
     })
     ws.send(auth)
-    id = '1'
-    ws.send(json.dumps({'id': id, 'type': 'start', 'payload': {'variables': {'input': {'channel': {
-            'teamOwner': 'AFD2022', 'category': 'CANVAS', 'tag': '0'}}}, 'extensions': {}, 'operationName': 'replace', 'query': query}}))
-    name = None
-    while True:
-        d = json.loads(ws.recv())
-        if 'id' in d and d['id'] == id:
-            data = d['payload']['data']['subscribe']['data']
-            if data['__typename'] == 'FullFrameMessageData':
-                name = data['name']
-                break
+
+    names = []
+
+    for (i, x, y) in get_canvas_configs(ws):
+      names.append(get_url(ws, i))
+
+
+
     ws.close()
-    return name
+    return names
 
 
 if __name__ == "__main__":
@@ -76,16 +131,12 @@ if __name__ == "__main__":
     os.makedirs(output_dir, exist_ok=True)
 
     token = get_token()
-    
-    while True:
-        url = get_image_url(token)
+    urls = get_image_url(token)
 
-        filename = str(math.floor(time.time())) + ".png"
-        print("Saving image to " + filename)
-        path = os.path.join(output_dir, filename)
+    for i, url in enumerate(urls):
+      filename = "{}_{}.png".format(math.floor(time.time()), i)
+      path = os.path.join(output_dir, filename)
 
-        req = requests.get(url)
-        with open(path, "wb") as f:
-            f.write(req.content)
-        
-        time.sleep(10)
+      req = requests.get(url)
+      with open(path, "wb") as f:
+          f.write(req.content)
