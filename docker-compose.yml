@@ -1,0 +1,9 @@
+version: '3.3'
+services:
+    rplace-get:
+        container_name: rplace-get
+        build: .
+        restart: unless-stopped
+        volumes:
+            - ./frames:/usr/src/app/frames
+            - ./logs:/usr/src/app/logs
