@@ -76,11 +76,16 @@ if __name__ == "__main__":
     os.makedirs(output_dir, exist_ok=True)
 
     token = get_token()
-    url = get_image_url(token)
+    
+    while True:
+        url = get_image_url(token)
 
-    filename = str(math.floor(time.time())) + ".png"
-    path = os.path.join(output_dir, filename)
+        filename = str(math.floor(time.time())) + ".png"
+        print("Saving image to " + filename)
+        path = os.path.join(output_dir, filename)
 
-    req = requests.get(url)
-    with open(path, "wb") as f:
-        f.write(req.content)
+        req = requests.get(url)
+        with open(path, "wb") as f:
+            f.write(req.content)
+        
+        time.sleep(10)
