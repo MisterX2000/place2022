@@ -8,6 +8,7 @@ from get import get_token, get_image_url
 import requests
 import math
 import time
+import threading
 
 
 # region Logger
@@ -41,11 +42,11 @@ def convert():
         if not isfile(fp):
             continue
         if isfile(ft) or isfile(ft.replace("_0", "")):
-            log.info("Skipping " + f)
+            #log.info("WEBU: Skipping " + f)
             continue
         # merge multiple images
         if "_" in f and not "_0" in f:
-            log.info("Skipping (Merge) " + f)
+            #log.info("WEBU: Skipping (Merge) " + f)
             continue
         
         files.append(f)
@@ -57,7 +58,7 @@ def convert():
         
         # merge multiple images
         if "_0" in f:
-            log.info(f"({i}/{len(files)}) Merging {fp}")
+            log.info(f"WEBU: ({i}/{len(files)}) Merging {fp}")
             
             images = [Image.open(fp), Image.open(fp.replace("_0", "_1"))]
             
@@ -77,7 +78,7 @@ def convert():
             continue
         
         # convert to webp
-        log.info(f"({i}/{len(files)}) Converting {fp}")
+        log.info(f"WEBU: ({i}/{len(files)}) Converting {fp}")
         im = Image.open(fp)
         im.save(ft, lossless = True, method = 6)
 
@@ -87,45 +88,52 @@ def gen_json():
     files = [join(path, f) for f in listdir(path) if isfile(join(path, f))]
     
     frames = {"frames": sorted(files)}
-    log.info("Saving frames.json")
+    log.info("WEBU: Saving frames.json")
     with open("frames/frames.json", 'w') as f:
         json.dump(frames, f)
 
 
 def update_web():
+    log.info("WEBU: Updating web...")
     convert()
     gen_json()
 
         
 if __name__ == "__main__":
-    output_dir = "frames"
+    output_dir = "frames/png"
+    sleep_time = 30
+    token_timeout = 120
     
     makedirs(output_dir, exist_ok=True)
     
-    token = get_token()
-    log.info("Got Token: " + token)
-    req_counter = 0
+    req_counter = token_timeout
 
     while True:
         req_counter += 1
-        if req_counter > 500:
+        if req_counter > token_timeout:
             token = get_token()
-            log.info("Got Token: " + token)
+            log.info("MAIN: Got Token " + token)
             req_counter = 0
-            update_web()
+
+            # start web update thread if not already running
+            if not threading.active_count() > 1:
+                threading.Thread(target=update_web).start()
+            else:
+                log.info("MAIN: Web Update Thread already running")
+            
     
         urls = get_image_url(token)
         
         curr = math.floor(time.time())
 
         for i, url in enumerate(urls):
-            filename = "{}_{}.png".format(curr, i)
+            filename = f"{curr}_{i}.png"
             path = join(output_dir, filename)
 
             req = requests.get(url)
-            log.info("Saving image: " + filename)
+            log.info("MAIN: Saving image " + filename)
             with open(path, "wb") as f:
                 f.write(req.content)
             
-        time.sleep(30)
+        time.sleep(sleep_time)
 
