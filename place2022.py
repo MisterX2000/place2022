@@ -58,7 +58,7 @@ def convert():
         
         # merge multiple images
         if "_0" in f:
-            log.info(f"WEBU: ({i}/{len(files)}) Merging {fp}")
+            log.info(f"WEBU: ({i+1}/{len(files)}) Merging {fp}")
             
             images = [Image.open(fp), Image.open(fp.replace("_0", "_1"))]
             
@@ -78,7 +78,7 @@ def convert():
             continue
         
         # convert to webp
-        log.info(f"WEBU: ({i}/{len(files)}) Converting {fp}")
+        log.info(f"WEBU: ({i+1}/{len(files)}) Converting {fp}")
         im = Image.open(fp)
         im.save(ft, lossless = True, method = 6)
 
