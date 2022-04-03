@@ -38,15 +38,16 @@ def convert():
         fp = join(path, f)
         ft = join(target, f).replace(".png", ".webp")
         
-        # check if file or already converted
+        
         if not isfile(fp):
-            continue
-        if isfile(ft) or isfile(ft.replace("_0", "")):
-            #log.info("WEBU: Skipping " + f)
             continue
         # merge multiple images
         if "_" in f and not "_0" in f:
             #log.info("WEBU: Skipping (Merge) " + f)
+            continue
+        # check if file or already converted
+        if isfile(ft) or isfile(ft.replace("_0", "")):
+            #log.info("WEBU: Skipping " + f)
             continue
         
         files.append(f)
@@ -59,20 +60,18 @@ def convert():
         # merge multiple images
         if "_0" in f:
             log.info(f"WEBU: ({i+1}/{len(files)}) Merging {fp}")
-            
-            images = [Image.open(fp), Image.open(fp.replace("_0", "_1"))]
-            
-            widths, heights = zip(*(i.size for i in images))
 
-            total_width = sum(widths)
-            max_height = max(heights)
+            if isfile(fp.replace("_0", "_3")):
+                images = [Image.open(fp), Image.open(fp.replace("_0", "_1")), Image.open(fp.replace("_0", "_2")), Image.open(fp.replace("_0", "_3"))]
+                new_im = Image.new('RGB', (2000, 2000))
+            else:
+                images = [Image.open(fp), Image.open(fp.replace("_0", "_1"))]
+                new_im = Image.new('RGB', (2000, 1000))
 
-            new_im = Image.new('RGB', (total_width, max_height))
-
-            x_offset = 0
-            for im in images:
-              new_im.paste(im, (x_offset,0))
-              x_offset += im.size[0]
+            for i, im in enumerate(images):
+                x = 0 if (i == 0 or i == 2) else 1000
+                y = 0 if (i == 0 or i == 1) else 1000
+                new_im.paste(im, (x, y))
             
             new_im.save(ft.replace("_0", ""), lossless = True, method = 6)
             continue
