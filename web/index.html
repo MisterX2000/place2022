@@ -1,61 +1,67 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>r/place 2022 Archive</title>
-    <style>
-        body {
-            padding: 0;
-            margin: 0;
-            overflow: hidden;
-            height: 100%;
-            background: black;
-        }
-        
-        canvas {
-            image-rendering: optimizeSpeed;             /* Older versions of FF          */
-            image-rendering: -moz-crisp-edges;          /* FF 6.0+                       */
-            image-rendering: -webkit-optimize-contrast; /* Safari                        */
-            image-rendering: -o-crisp-edges;            /* OS X & Windows Opera (12.02+) */
-            image-rendering: pixelated;                 /* Awesome future-browsers       */
-            -ms-interpolation-mode: nearest-neighbor;   /* IE                            */
-        }
-        
-        .frameplayer {
-            margin: 0 auto;
-        }
-    </style>        
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>r/place 2022 Archive</title>
+  <style>
+    body {
+      padding: 0;
+      margin: 0;
+      overflow: hidden;
+      height: 100%;
+      background: black;
+    }
+
+    canvas {
+      image-rendering: optimizeSpeed !important; /* Older versions of FF */
+      image-rendering: -moz-crisp-edges !important; /* FF 6.0+ */
+      image-rendering: -webkit-optimize-contrast !important; /* Safari */
+      image-rendering: -o-crisp-edges !important; /* OS X & Windows Opera (12.02+) */
+      image-rendering: pixelated !important; /* Awesome future-browsers */
+      -ms-interpolation-mode: nearest-neighbor !important; /* IE */
+
+      -o-object-fit: contain;
+      object-fit: contain;
+    }
+
+    .frameplayer {
+      background: black !important;
+      position: absolute !important;
+    }
+  </style>
 </head>
 
 <body>
-	<div id="player" class="frameplayer" data-vidsrc="frames/frames.json"></div>
+  <div id="player" class="frameplayer" data-vidsrc="frames/frames.json"></div>
 </body>
 
 <script src="https://cdn.jsdelivr.net/npm/image-sequence-player/dist/lib.min.js"></script>
 <script src="https://unpkg.com/@panzoom/panzoom@4.4.4/dist/panzoom.min.js"></script>
 <script>
-    var options = {
-        rate: 15,
-        controls: true,
-        autoplay: true,
-        backwards: false,
-        startFrame: 0,
-        width: '100vmin',
-        height: '100vmin',
-        progressBarColor: "#2450a4"
-    };
-    var player = new FramePlayer('player', options);
-    player.play();
+  var options = {
+    rate: 10,
+    controls: true,
+    autoplay: true,
+    backwards: false,
+    startFrame: 0,
+    width: '100%',
+    height: '100%',
+    progressBarColor: "#2450a4"
+  };
+  var player = new FramePlayer('player', options);
+  player.play();
 
-    const elem = document.getElementsByTagName('canvas')[0]
-    const panzoom = Panzoom(elem, {
-        maxScale: 10,
-        minScale: 1,
-        animate: true,
-        overflow: 'shown'
-    })
-    elem.parentElement.addEventListener('wheel', panzoom.zoomWithWheel)
+  const elem = document.getElementsByTagName('canvas')[0]
+  const panzoom = Panzoom(elem, {
+    maxScale: 10,
+    minScale: 1,
+    animate: true,
+    overflow: 'shown'
+  })
+  elem.parentElement.addEventListener('wheel', panzoom.zoomWithWheel)
 </script>
+
 </html>
